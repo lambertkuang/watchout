@@ -8,7 +8,8 @@ var gameOptions = {
 
 var gameStats = {
   score: 0,
-  bestScore: 0
+  bestScore: 0,
+  collisions: 0
 }
 
 var axes = {
@@ -20,15 +21,18 @@ var gameBoard = d3.select('.container').append('svg:svg')
                 .attr('width', gameOptions.width)
                 .attr('height', gameOptions.height);
 
-var Player = function() {
-  this.x = 50;
-  this.y = 50;
-  this.r = 20;
-  this.collided = false;
-};
+// create enemies
+var enemies = [];
+
+for (var i = 0; i < gameOptions.nEnemies; i++) {
+  enemies.push({
+    id: i,
+    x: Math.random() * 1000,
+    y: Math.random() * 700
+  });
+}
 
 var player1 = new Player();
-var enemies = [];
 
 var checkX = function(x) {
   if (x < 0) {
@@ -49,52 +53,77 @@ var checkY = function(y) {
 };
 
 var collide = function() {
-  // radiusSum = player1.getR
   var collided = false;
-
 
   enemies.forEach(function(enemy) {
     var radiusSum = parseFloat(20) + player1.getR();
-    // d3.select('svg').selectAll('circle').attr('class', function(d) {console.log(d.cx); return d.x});
-    var xDiff = parseFloat(d3.select('svg').selectAll('circle').attr('cx', function(d) {return d.x })) - player1.getX();
-    var yDiff = parseFloat(d3.select('svg').selectAll('circle').attr('cy', function(d) {return d.y})) - player1.getY();
-
+    var xDiff = parseFloat(d3.select(enemy)[0][0].x) - player1.getX();
+    var yDiff = parseFloat(d3.select(enemy)[0][0].y) - player1.getY();
     var sep = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
     if (sep < radiusSum) {
       collided = true;
     }
   });
-  return collided;    
+
+  
+  if (!collided) {
+    gameStats.score++;
+    if (gameStats.score >= gameStats.bestScore) {
+      gameStats.bestScore++;
+    }
+  } else {
+    gameStats.score = 0;
+    gameStats.collisions++;
+  }
+
+  // return collided;    
 } 
+
+// var detectCollisions = function() {
+//   var collision = false;
+//   d3.select(enemies).each(function() {
+//     var radSum = 40;
+//     var x = this.x - player1.x;
+//     var y = this.y - player1.y;
+//     if (Math.sqrt(x*x + y*y) < radSum) {
+//       collision = true;
+//     }
+//   });
+//   if (collision) {
+//     gameStats.score = 0;
+//     gameStats.collisions++;
+//   } else {
+//     gameStats.score++;
+//     if (gameStats.score >= gameStats.bestScore) {
+//       gameStats.bestScore++;
+//     }
+//   }
+//   $('.current').find('span').text(gameStats.score);
+//   $('.collisions').find('span').text(gameStats.collisions);
+//   $('.high').find('span').text(gameStats.bestScore);
+// };
+
+// d3.timer(detectCollisions);
 
 var update = function() {
   d3.select('svg').selectAll('circle').data(enemies)
-  .transition().duration(1000)
+  .transition()
+  .duration(1000)
   .attr('cx', function(d) {
     var tempX = Math.random() * 1000;
+    d.x = checkX(tempX);
     return checkX(tempX);
   })
   .attr('cy', function(d) {
     var tempY = Math.random() * 700;
+    d.y = checkY(tempY);
     return checkY(tempY);
   }).attr('class', function(d) {
     return d.id;
   })
   .attr('r', 20);
+
 };
-
-// var Enemies = function() {
-//   this.x = Math.random() * 100;
-//   this.y = Math.random() * 100;
-// }
-
-for (var i = 0; i < gameOptions.nEnemies; i++) {
-  enemies.push({
-    id: i,
-    x: Math.random() * 1000,
-    y: Math.random() * 700
-  });
-}
 
 // Place enemies and players on game board
 d3.select('svg').selectAll('svg').data(enemies).enter().append('circle')
@@ -106,72 +135,69 @@ d3.select('svg').selectAll('svg').data(enemies).enter().append('circle')
   })
   .attr('r', 20);
 
-
+// d3.timer(update);
 setInterval(update, 1000);
 setInterval(function() {
-  if (!collide()) {
-    gameStats.score++;
-  } else {
-    gameStats.score = 0;
-  }
-
+  // if (!collide()) {
+  //   gameStats.score++;
+  //   if (gameStats.score >= gameStats.bestScore) {
+  //     gameStats.bestScore++;
+  //   }
+  // } else {
+  //   gameStats.score = 0;
+  //   gameStats.collisions++;
+  // }
+  collide();
   $('.current').find('span').text(gameStats.score);
+  $('.collisions').find('span').text(gameStats.collisions);
+  $('.high').find('span').text(gameStats.bestScore);
 }, 100);
 
-
-Player.prototype.getX = function() {
-  return this.x; 
+Player.prototype.transform = function(coordinate) {
+  this.setX(coordinate.x);
+  this.setY(coordinate.y); 
 };
-
-Player.prototype.getY = function() {
-  return this.y;
-};
-
-Player.prototype.getR = function() {
-  return this.r;
-};
-
-Player.prototype.setX = function(x) {
-  //check if this.x is greater than the game board
-  // if it is then set it at the edge of the board
-  if (x >= gameOptions.width) {
-    x = gameOptions.width - gameOptions.padding;
-  } 
-  if (x <= 0) {
-    x = gameOptions.padding;
-  }
-
-  this.x = x;
-};
-
-Player.prototype.setY = function(y) {
-  if (y >= gameOptions.height) {
-    y = gameOptions.height - gameOptions.padding;
-  }
-  if (y <= 0) {
-    y = gameOptions.padding;
-  }
-
-  this.y = y;
-};
-
-// Player.prototype.transform = function(coordinate) {
-//   this.setX(coordinate.x);
-//   this.setY(coordinate.y); 
-// };
 
 // draws the player
 d3.select('svg').append('circle').attr('class', 'player').attr('cx', player1.getX()).attr('cy', player1.getY()).attr('r', player1.getR()).attr('fill', 'red');
 
 // Move player dot
-var drag = d3.behavior.drag().on("drag", function(d, i) {
-  d.x += d3.event.dx;
-  d.y += d3.event.dy;
-  d3.select(this).attr("transform", function(d,i) {
-    return "translate(" + [d.x,d.y] + ")";
-  });
-});
+// var drag = d3.behavior.drag().on("drag", function(d, i) {
+//   d.x += d3.event.dx;
+//   d.y += d3.event.dy;
+//   var tempx = d.x;
+//   var tempy = d.y;
 
+//   player1.setX(this.x);
+//   player1.setY(d.y);
+//   d3.select(this).attr("transform", function(d,i) {
+//     d3.select('player').attr('cx', function(d) {
+//       return tempx;
+//     }).attr('cy', function(d) {
+//       return tempy;
+//     });
+//     return "translate(" + [d.x,d.y] + ")";
+//   });
+
+// });
+function dragstarted(d) {
+  d3.event.sourceEvent.stopPropagation();
+  d3.select(this).classed("dragging", true);
+}
+
+function dragged(d) {
+  d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
+}
+
+function dragended(d) {
+  d3.select(this).classed("dragging", false);
+}
+
+var drag = d3.behavior.drag()
+    .origin(function(d) { return d; })
+    .on("dragstart", dragstarted)
+    .on("drag", dragged)
+    .on("dragend", dragended);
 d3.select('.player').data([{"x":player1.getX(), "y":player1.getY()}]).call(drag);
 
 
