@@ -27,24 +27,47 @@ var Player = function() {
   this.collided = false;
 };
 
-// var Enemies = function() {
-//   this.x = Math.random() * 100;
-//   this.y = Math.random() * 100;
-// }
-
-
 var player1 = new Player();
 var enemies = [];
 
-for (var i = 0; i < gameOptions.nEnemies; i++) {
-  enemies.push({
-    id: i,
-    x: Math.random() * 1000,
-    y: Math.random() * 700
-  });
-}
+var checkX = function(x) {
+  if (x < 0) {
+    x = gameOptions.padding;
+  } else if (x > gameOptions.width){
+    x = gameOptions.width - gameOptions.padding;
+  }
+  return x;
+};
 
-function update() {
+var checkY = function(y) {
+  if (y < 0) {
+    y = 0;
+  } else if (y > gameOptions.height){
+    y = gameOptions.height - gameOptions.padding;
+  }
+  return y;
+};
+
+var collide = function() {
+  // radiusSum = player1.getR
+  var collided = false;
+
+
+  enemies.forEach(function(enemy) {
+    var radiusSum = parseFloat(20) + player1.getR();
+    // d3.select('svg').selectAll('circle').attr('class', function(d) {console.log(d.cx); return d.x});
+    var xDiff = parseFloat(d3.select('svg').selectAll('circle').attr('cx', function(d) {return d.x })) - player1.getX();
+    var yDiff = parseFloat(d3.select('svg').selectAll('circle').attr('cy', function(d) {return d.y})) - player1.getY();
+
+    var sep = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
+    if (sep < radiusSum) {
+      collided = true;
+    }
+  });
+  return collided;    
+} 
+
+var update = function() {
   d3.select('svg').selectAll('circle').data(enemies)
   .transition().duration(1000)
   .attr('cx', function(d) {
@@ -60,40 +83,28 @@ function update() {
   .attr('r', 20);
 };
 
-function checkX(x) {
-  if (x < 0) {
-    x = gameOptions.padding;
-  } else if (x > gameOptions.width){
-    x = gameOptions.width - gameOptions.padding;
-  }
-  return x;
-};
+// var Enemies = function() {
+//   this.x = Math.random() * 100;
+//   this.y = Math.random() * 100;
+// }
 
-function checkY(y) {
-  if (y < 0) {
-    y = 0;
-  } else if (y > gameOptions.height){
-    y = gameOptions.height - gameOptions.padding;
-  }
-  return y;
-};
-
-function collide() {
-  // radiusSum = player1.getR
-  var collided = false;
-  enemies.forEach(function(enemy) {
-    var radiusSum = parseFloat(20) + player1.getR();
-    // console.log(d3.select('svg').selectAll('circle').attr('class'))
-    var xDiff = parseFloat(d3.select('svg').selectAll('circle').attr('cx')) - player1.getX();
-    var yDiff = parseFloat(d3.select('svg').selectAll('circle').attr('cy')) - player1.getY();
-
-    var sep = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
-    if (sep < radiusSum) {
-      collided = true;
-    }
+for (var i = 0; i < gameOptions.nEnemies; i++) {
+  enemies.push({
+    id: i,
+    x: Math.random() * 1000,
+    y: Math.random() * 700
   });
-  return collided;    
-} 
+}
+
+// Place enemies and players on game board
+d3.select('svg').selectAll('svg').data(enemies).enter().append('circle')
+  .attr('cx', function(d) {
+    return checkX(d.x);
+  })
+  .attr('cy', function(d) {
+    return checkY(d.y);
+  })
+  .attr('r', 20);
 
 
 setInterval(update, 1000);
@@ -106,16 +117,6 @@ setInterval(function() {
 
   $('.current').find('span').text(gameStats.score);
 }, 100);
-
-// Place enemies and players on game board
-d3.select('svg').selectAll('svg').data(enemies).enter().append('circle')
-  .attr('cx', function(d) {
-    return checkX(d.x);
-  })
-  .attr('cy', function(d) {
-    return checkY(d.y);
-  })
-  .attr('r', 20);
 
 
 Player.prototype.getX = function() {
@@ -162,6 +163,7 @@ Player.prototype.setY = function(y) {
 // draws the player
 d3.select('svg').append('circle').attr('class', 'player').attr('cx', player1.getX()).attr('cy', player1.getY()).attr('r', player1.getR()).attr('fill', 'red');
 
+// Move player dot
 var drag = d3.behavior.drag().on("drag", function(d, i) {
   d.x += d3.event.dx;
   d.y += d3.event.dy;
