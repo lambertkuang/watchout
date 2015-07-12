@@ -56,7 +56,7 @@ var collide = function() {
   var collided = false;
 
   enemies.forEach(function(enemy) {
-    var radiusSum = parseFloat(20) + player1.getR();
+    var radiusSum = 40;
     var xDiff = parseFloat(d3.select(enemy)[0][0].x) - player1.getX();
     var yDiff = parseFloat(d3.select(enemy)[0][0].y) - player1.getY();
     var sep = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
@@ -65,7 +65,6 @@ var collide = function() {
     }
   });
 
-  
   if (!collided) {
     gameStats.score++;
     if (gameStats.score >= gameStats.bestScore) {
@@ -75,35 +74,8 @@ var collide = function() {
     gameStats.score = 0;
     gameStats.collisions++;
   }
-
-  // return collided;    
-} 
-
-// var detectCollisions = function() {
-//   var collision = false;
-//   d3.select(enemies).each(function() {
-//     var radSum = 40;
-//     var x = this.x - player1.x;
-//     var y = this.y - player1.y;
-//     if (Math.sqrt(x*x + y*y) < radSum) {
-//       collision = true;
-//     }
-//   });
-//   if (collision) {
-//     gameStats.score = 0;
-//     gameStats.collisions++;
-//   } else {
-//     gameStats.score++;
-//     if (gameStats.score >= gameStats.bestScore) {
-//       gameStats.bestScore++;
-//     }
-//   }
-//   $('.current').find('span').text(gameStats.score);
-//   $('.collisions').find('span').text(gameStats.collisions);
-//   $('.high').find('span').text(gameStats.bestScore);
-// };
-
-// d3.timer(detectCollisions);
+ 
+}; 
 
 var update = function() {
   d3.select('svg').selectAll('circle').data(enemies)
@@ -135,18 +107,10 @@ d3.select('svg').selectAll('svg').data(enemies).enter().append('circle')
   })
   .attr('r', 20);
 
-// d3.timer(update);
+
 setInterval(update, 1000);
 setInterval(function() {
-  // if (!collide()) {
-  //   gameStats.score++;
-  //   if (gameStats.score >= gameStats.bestScore) {
-  //     gameStats.bestScore++;
-  //   }
-  // } else {
-  //   gameStats.score = 0;
-  //   gameStats.collisions++;
-  // }
+
   collide();
   $('.current').find('span').text(gameStats.score);
   $('.collisions').find('span').text(gameStats.collisions);
@@ -161,25 +125,6 @@ Player.prototype.transform = function(coordinate) {
 // draws the player
 d3.select('svg').append('circle').attr('class', 'player').attr('cx', player1.getX()).attr('cy', player1.getY()).attr('r', player1.getR()).attr('fill', 'red');
 
-// Move player dot
-// var drag = d3.behavior.drag().on("drag", function(d, i) {
-//   d.x += d3.event.dx;
-//   d.y += d3.event.dy;
-//   var tempx = d.x;
-//   var tempy = d.y;
-
-//   player1.setX(this.x);
-//   player1.setY(d.y);
-//   d3.select(this).attr("transform", function(d,i) {
-//     d3.select('player').attr('cx', function(d) {
-//       return tempx;
-//     }).attr('cy', function(d) {
-//       return tempy;
-//     });
-//     return "translate(" + [d.x,d.y] + ")";
-//   });
-
-// });
 function dragstarted(d) {
   d3.event.sourceEvent.stopPropagation();
   d3.select(this).classed("dragging", true);
